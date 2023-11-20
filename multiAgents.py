@@ -116,9 +116,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
     """
     Your minimax agent (question 2)
     """
-
-
-
     def value(self, gameState, player,depth):
         if gameState.isWin() or gameState.isLose() or depth == 2:
             return betterEvaluationFunction(gameState)
@@ -141,10 +138,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
             return v
 
-
-
-
-
     def getAction(self, gameState):
         legalActions = gameState.getLegalActions(0)
         v = float('-inf')
@@ -164,18 +157,76 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     Your minimax agent with alpha-beta pruning (question 3)
     """
 
+    def value(self, gameState, player, depth, alpha, beta):
+        if gameState.isWin() or gameState.isLose() or depth == 3:
+            return betterEvaluationFunction(gameState)
+        if player % 3 == 0:
+            if gameState.isWin() or gameState.isLose():
+                return betterEvaluationFunction(gameState)
+            legalActions = gameState.getLegalActions(0)
+            v = float('-inf')
+            for a in legalActions:
+                v = max(self.value(gameState.generateSuccessor(0, a), player + 1,depth,alpha,beta), v)
+                if v > beta:
+                    return v
+                alpha = max(alpha,v)
+            return v
+        else:
+            legalActions = gameState.getLegalActions(player % 3)
+            v = float('+inf')
+            for a in legalActions:
+                if player%3 == 2:
+                    v = min(self.value(gameState.generateSuccessor(player % 3, a), player + 1,depth+1,alpha,beta), v)
+                else:
+                    v = min(self.value(gameState.generateSuccessor(player % 3, a), player + 1, depth,alpha,beta), v)
+                if v < alpha:
+                    return v
+                beta = min(beta,v)
+            return v
+
     def getAction(self, gameState):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        legalActions = gameState.getLegalActions(0)
+        v = float('-inf')
+        v_action = legalActions[0]
+        player = 0
+        for a in legalActions:
+            nexts = gameState.generateSuccessor(0, a)
+            k = self.value(nexts, player+1, 0, float('-inf'), float('+inf'))
+            if k > v:
+                v_action = a
+                v = k
+
+        return v_action
 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 4)
     """
+
+    def value(self, gameState, player, depth):
+        if gameState.isWin() or gameState.isLose() or depth == 3:
+            return betterEvaluationFunction(gameState)
+        if player % 3 == 0:
+            if gameState.isWin() or gameState.isLose():
+                return betterEvaluationFunction(gameState)
+            legalActions = gameState.getLegalActions(0)
+            v = float('-inf')
+            for a in legalActions:
+                v = max(self.value(gameState.generateSuccessor(0, a), player + 1, depth), v)
+            return v
+        else:
+            legalActions = gameState.getLegalActions(player % 3)
+            v = 0
+            for a in legalActions:
+                if player%3 == 2:
+                    v += self.value(gameState.generateSuccessor(player % 3, a), player + 1, depth+1)
+                else:
+                    v += self.value(gameState.generateSuccessor(player % 3, a), player + 1, depth)
+            return v/len(legalActions)
 
     def getAction(self, gameState):
         """
@@ -184,9 +235,19 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
 
+        legalActions = gameState.getLegalActions(0)
+        v = float('-inf')
+        v_action = legalActions[0]
+        player = 0
+        for a in legalActions:
+            nexts = gameState.generateSuccessor(0, a)
+            k = self.value(nexts, player+1, 0)
+            if k > v:
+                v_action = a
+                v = k
+
+        return v_action
 
 def betterEvaluationFunction(currentGameState:GameState):
     def minDistanceBfs(currentGameState:GameState):
